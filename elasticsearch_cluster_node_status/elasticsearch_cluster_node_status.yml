@@ -6,6 +6,9 @@ metadata:
   num_docs:
     label: Number of indexed documents
     precision: "0"
+  docs_deleted:
+    label: Number of deleted documents
+    precision: "0"
   open_file_descriptors:
     label: Number of opened file descriptors
     precision: "0"
@@ -40,3 +43,34 @@ metadata:
     label: GC - ConcurrentMarkSweep
     units: ms
     precision: "0"
+  index_size:
+    label: Index size
+    units: MB
+    precision: "0"
+  index_time:
+    label: Index time
+    units: ms
+    precision: "0"
+  get_time:
+    label: Get time
+    units: ms
+    precision: "0"
+  exists_time:
+    label: Exists time
+    units: ms
+    precision: "0"
+  query_total:
+    label: Total queries
+    precision: "0"
+  query_time:
+    label: Query time
+    units: ms
+    precision: "0"
+  fetch_total:
+    label: Total fetches
+    precision: "0"
+  fetch_time:
+    label: Fetch time
+    units: ms
+    precision: "0"    
+    

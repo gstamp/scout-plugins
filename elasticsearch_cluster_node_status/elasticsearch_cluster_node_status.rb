@@ -1,4 +1,4 @@
-# Reports stats on a node in the elasticsearch cluster, including size of indices, 
+# Reports stats on a node in the elasticsearch cluster, including size of indices,
 # number of docs, memory used, threads used, garbage collection times, etc
 #
 # Created by John Wood of Signal
@@ -44,6 +44,17 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
     report(:non_heap_committed => b_to_mb(response['jvm']['mem']['non_heap_committed_in_bytes'] || 0))
     report(:threads_count => response['jvm']['threads']['count'] || 0)
 
+    # index stats
+    report(:docs_deleted => response['indices']['docs']['deleted'] || 0)
+    report(:index_size => b_to_mb(response['indices']['store']['size_in_bytes'] || 0)) if response['indices']['store']
+    report(:index_time => response['indices']['indexing']['index_time_in_millis'] || 0) if response['indices']['indexing']
+    report(:get_time => response['indices']['get']['time_in_millis'] || 0) if response['indices']['get']
+    report(:exists_time => response['indices']['get']['exists_time_in_millis'] || 0) if response['indices']['get']
+    report(:query_total => response['indices']['search']['query_total'] || 0) if response['indices']['search']
+    report(:query_time => response['indices']['search']['query_time_in_millis'] || 0) if response['indices']['search']
+    report(:fetch_total => response['indices']['search']['fetch_total'] || 0) if response['indices']['search']
+    report(:fetch_time => response['indices']['search']['fetch_time_in_millis'] || 0) if response['indices']['search']
+
     gc_time(:gc_collection_time => response['jvm']['gc'])
     # Additional GC metrics provided by ElasticSearch can vary:
     gc_time(:gc_parnew_collection_time => response['jvm']['gc']['collectors']['ParNew']) if response['jvm']['gc']['collectors']['ParNew']
@@ -60,25 +71,25 @@ class ElasticsearchClusterNodeStatus < Scout::Plugin
   def b_to_mb(bytes)
     bytes && bytes.to_f / 1024 / 1024
   end
-  
+
   # Reports the time spent in collection / # of collections for this reporting period.
   def gc_time(data)
     key = data.keys.first.to_s
     collection_time = data.values.first['collection_time_in_millis'] || 0
     collection_count = data.values.first['collection_count'] || 1
-    
+
     previous_collection_time = memory(key)
     previous_collection_count = memory(key.sub('time','count'))
-    
+
     if previous_collection_time and previous_collection_count
       rate = (collection_time-previous_collection_time).to_f/(collection_count-previous_collection_count)
       if rate >=0 # assuming that restarting elasticsearch restarts counts, which means the rate could be < 0.
-        report(data.keys.first => rate) 
+        report(data.keys.first => rate)
       elsif rate.nan? # no activity
-        report(data.keys.first => 0) 
+        report(data.keys.first => 0)
       end
     end
-    
+
     remember(key => collection_time || 0)
     remember(key.sub('time','count') => collection_count || 1)
   end
